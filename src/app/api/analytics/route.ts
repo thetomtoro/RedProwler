@@ -56,7 +56,7 @@ export const GET = withErrorHandler(async () => {
         ])
 
     // Get subreddit names for breakdown
-    const subredditIds = subredditCounts.map((s) => s.subredditId)
+    const subredditIds = subredditCounts.map((s) => s.subredditId).filter((id): id is string => id !== null)
     const subreddits = await prisma.subreddit.findMany({
         where: { id: { in: subredditIds } },
         select: { id: true, name: true },
@@ -76,7 +76,7 @@ export const GET = withErrorHandler(async () => {
             count: s._count.id,
         })),
         subredditBreakdown: subredditCounts.map((s) => ({
-            subreddit: subMap[s.subredditId] || "unknown",
+            subreddit: (s.subredditId && subMap[s.subredditId]) || "unknown",
             count: s._count.id,
         })),
     })

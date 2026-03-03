@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
                                         id: l.id,
                                         title: l.title,
                                         score: l.relevanceScore,
-                                        subreddit: l.subreddit.name,
+                                        subreddit: l.subreddit?.name ?? "hackernews",
                                     })),
                                 },
                             ])

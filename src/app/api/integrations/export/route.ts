@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         const rows = leads.map((l) => [
             l.id,
             l.product.name,
-            `r/${l.subreddit.name}`,
+            `r/${l.subreddit?.name ?? "hackernews"}`,
             l.title || "",
             l.author,
             l.relevanceScore.toFixed(2),

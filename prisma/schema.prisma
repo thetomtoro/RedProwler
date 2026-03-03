@@ -134,7 +134,7 @@ enum SubredditSource {
 model Lead {
   id          String @id @default(cuid())
   productId   String @map("product_id")
-  subredditId String @map("subreddit_id")
+  subredditId String? @map("subreddit_id")
 
   // Reddit data
   redditId        String            @unique @map("reddit_id")
@@ -161,7 +161,7 @@ model Lead {
   platform Platform @default(REDDIT)
 
   product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  subreddit   Subreddit    @relation(fields: [subredditId], references: [id], onDelete: Cascade)
+  subreddit   Subreddit?   @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   engagements Engagement[]
 
   createdAt DateTime @default(now()) @map("created_at")

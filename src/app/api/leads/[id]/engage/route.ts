@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
         const leadContext = {
             title: lead.title || undefined,
             body: lead.body,
-            subreddit: lead.subreddit.name,
+            subreddit: lead.subreddit?.name ?? "hackernews",
             author: lead.author,
             redditScore: lead.redditScore,
             commentCount: lead.commentCount,
