@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { logger } from "@/lib/logger"
 
 let client: Anthropic | null = null
 
@@ -70,7 +71,7 @@ export function createStreamingResponse(
                 }
                 controller.close()
             } catch (error) {
-                console.error("AI streaming error:", error)
+                logger.error("AI streaming error", error)
                 controller.enqueue(
                     new TextEncoder().encode(
                         "\n\n__ERROR__AI generation failed. Please try again."

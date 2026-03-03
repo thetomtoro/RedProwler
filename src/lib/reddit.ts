@@ -48,8 +48,11 @@ class RedditClient {
             return this.accessToken
         }
 
-        const clientId = process.env.REDDIT_CLIENT_ID!
-        const clientSecret = process.env.REDDIT_CLIENT_SECRET!
+        const clientId = process.env.REDDIT_CLIENT_ID
+        const clientSecret = process.env.REDDIT_CLIENT_SECRET
+        if (!clientId || !clientSecret) {
+            throw new Error("REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET must be set")
+        }
         const userAgent = process.env.REDDIT_USER_AGENT || "RedProwler/1.0"
 
         const response = await fetch("https://www.reddit.com/api/v1/access_token", {

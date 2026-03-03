@@ -3,9 +3,13 @@ import { withErrorHandler, successResponse, ApiError } from "@/lib/api-helpers"
 import { requirePlan } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { isValidSlackUrl } from "@/lib/safe-fetch"
 
 const slackSchema = z.object({
-    webhookUrl: z.string().url().startsWith("https://hooks.slack.com/"),
+    webhookUrl: z.string().url().max(500).refine(
+        (url) => isValidSlackUrl(url),
+        "Must be a valid Slack webhook URL (https://hooks.slack.com/services/...)"
+    ),
 })
 
 export const POST = withErrorHandler(async (req: NextRequest) => {

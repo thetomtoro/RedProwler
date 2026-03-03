@@ -7,6 +7,14 @@ import { generateReplySchema } from "@/lib/validators"
 import { MODELS } from "@/constants"
 import { PLAN_LIMITS } from "@/constants"
 import { resetUsageIfNeeded } from "@/lib/auth-helpers"
+import { checkRateLimit } from "@/lib/rate-limit"
+import { logger } from "@/lib/logger"
+
+const ENGAGEMENT_TYPE_MAP = {
+    reply: "REPLY",
+    conversation_starter: "CONVERSATION_STARTER",
+    dm_template: "DM_TEMPLATE",
+} as const
 
 export async function POST(req: NextRequest, ctx: { params: Promise<Record<string, string>> }) {
     try {
@@ -18,6 +26,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
         let user = await prisma.user.findUnique({ where: { clerkId } })
         if (!user) {
             return NextResponse.json({ error: { message: "User not found" } }, { status: 401 })
+        }
+
+        // Rate limit: 10 AI generations per minute per user
+        const rl = checkRateLimit(`engage:${user.id}`, 10, 60_000)
+        if (!rl.allowed) {
+            return NextResponse.json(
+                { error: { message: "Too many requests. Please wait before generating again." } },
+                { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+            )
         }
 
         // Reset usage counters if new billing period
@@ -94,15 +111,27 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
                 break
         }
 
-        // Update lead status
-        await prisma.lead.update({
-            where: { id },
-            data: { status: "ENGAGED" },
-        })
+        // Update lead status and create engagement record
+        const engagementType = ENGAGEMENT_TYPE_MAP[type]
+
+        await Promise.all([
+            prisma.lead.update({
+                where: { id },
+                data: { status: "ENGAGED" },
+            }),
+            prisma.engagement.create({
+                data: {
+                    userId: user.id,
+                    leadId: id,
+                    type: engagementType,
+                    generatedContent: "", // Placeholder — will be updated by client
+                },
+            }),
+        ])
 
         return createStreamingResponse(MODELS.REPLY_GENERATION, systemPrompt, userMessage)
     } catch (error) {
-        console.error("Engage route error:", error)
+        logger.error("Engage route error", error)
         return NextResponse.json(
             { error: { message: "Something went wrong" } },
             { status: 500 }

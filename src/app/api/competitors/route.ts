@@ -24,9 +24,6 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const body = await req.json()
     const data = addCompetitorSchema.parse(body)
 
-    // Read productId from the already-parsed body (not a second req.json() call)
-    const productId = body.productId as string | undefined
-
     // Validate product ownership
     const userProducts = await prisma.product.findMany({
         where: { userId: user.id },
@@ -38,9 +35,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     }
 
     const userProductIds = new Set(userProducts.map((p) => p.id))
-    const targetProductId = productId || userProducts[0].id
+    const targetProductId = data.productId || userProducts[0].id
 
-    if (productId && !userProductIds.has(productId)) {
+    if (data.productId && !userProductIds.has(data.productId)) {
         throw new ApiError(403, "Forbidden")
     }
 

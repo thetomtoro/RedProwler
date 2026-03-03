@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
+import { logger } from "@/lib/logger"
 
 export class ApiError extends Error {
     constructor(public statusCode: number, message: string) {
@@ -33,7 +34,7 @@ export function withErrorHandler(
                     { status: 400 }
                 )
             }
-            console.error("Unhandled API error:", error)
+            logger.error("Unhandled API error", error, { url: req.url, method: req.method })
             return NextResponse.json(
                 { error: { code: "INTERNAL_ERROR", message: "Something went wrong" } },
                 { status: 500 }

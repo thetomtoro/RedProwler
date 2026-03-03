@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-helpers"
+import { logger } from "@/lib/logger"
 import { requirePlan, checkPlanLimit } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
@@ -91,7 +92,7 @@ export async function GET(req: NextRequest) {
                 { status: error.statusCode }
             )
         }
-        console.error("Export error:", error)
+        logger.error("Export error", error)
         return NextResponse.json(
             { error: { code: "INTERNAL_ERROR", message: "Export failed" } },
             { status: 500 }

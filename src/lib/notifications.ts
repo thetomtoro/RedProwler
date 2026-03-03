@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { PLAN_LIMITS } from "@/constants"
 import { createHmac } from "crypto"
+import { safeFetch, isValidSlackUrl } from "@/lib/safe-fetch"
+import { logger } from "@/lib/logger"
 import type { NotificationType, PlanTier } from "@/generated/prisma/client"
 
 // ─── In-App Notification Creation ───
@@ -41,15 +43,22 @@ export async function sendSlackNotification(
     if (!user?.slackWebhookUrl) return false
     if (!PLAN_LIMITS[user.plan as PlanTier].slackIntegration) return false
 
+    // Validate URL before fetching to prevent SSRF
+    if (!isValidSlackUrl(user.slackWebhookUrl)) {
+        logger.warn("Invalid Slack webhook URL stored for user", { userId })
+        return false
+    }
+
     try {
         const response = await fetch(user.slackWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(message),
+            redirect: "error",
         })
         return response.ok
     } catch (error) {
-        console.error(`Slack notification failed for user ${userId}:`, error)
+        logger.error("Slack notification failed", error, { userId })
         return false
     }
 }
@@ -87,7 +96,7 @@ export async function fireWebhooks(
                 .digest("hex")
 
             try {
-                await fetch(wh.url, {
+                await safeFetch(wh.url, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -98,7 +107,7 @@ export async function fireWebhooks(
                     signal: AbortSignal.timeout(10000),
                 })
             } catch (error) {
-                console.error(`Webhook ${wh.id} delivery failed:`, error)
+                logger.error("Webhook delivery failed", error, { webhookId: wh.id })
             }
         })
     )

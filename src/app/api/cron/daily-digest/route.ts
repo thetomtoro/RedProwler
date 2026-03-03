@@ -2,27 +2,24 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createNotification, sendSlackNotification, fireWebhooks } from "@/lib/notifications"
 import { PLAN_LIMITS } from "@/constants"
+import { verifyCronAuth } from "@/lib/cron-auth"
+import { logger } from "@/lib/logger"
 import type { PlanTier } from "@/generated/prisma/client"
 
 export async function GET(req: NextRequest) {
-    const cronSecret = process.env.CRON_SECRET
-    const authHeader = req.headers.get("authorization")
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(req)
+    if (authError) return authError
 
     try {
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
+        // Only select fields we actually use — no email, displayName, slackWebhookUrl
         const users = await prisma.user.findMany({
             where: { products: { some: {} } },
             select: {
                 id: true,
                 plan: true,
-                email: true,
-                displayName: true,
                 leadsUsedThisMonth: true,
-                slackWebhookUrl: true,
             },
         })
 
@@ -135,7 +132,7 @@ export async function GET(req: NextRequest) {
 
                 digestsSent++
             } catch (error) {
-                console.error(`Digest failed for user ${user.id}:`, error)
+                logger.error("Digest failed for user", error, { userId: user.id })
             }
         }
 
@@ -145,7 +142,7 @@ export async function GET(req: NextRequest) {
             usersProcessed: users.length,
         })
     } catch (error) {
-        console.error("Daily digest cron error:", error)
+        logger.error("Daily digest cron error", error)
         return NextResponse.json({ error: "Internal error" }, { status: 500 })
     }
 }

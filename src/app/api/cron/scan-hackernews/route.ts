@@ -5,20 +5,26 @@ import { scoreLead } from "@/lib/scoring"
 import { PLAN_LIMITS } from "@/constants"
 import { resetUsageIfNeeded } from "@/lib/auth-helpers"
 import { createNotification, sendSlackNotification, fireWebhooks } from "@/lib/notifications"
+import { verifyCronAuth } from "@/lib/cron-auth"
+import { logger } from "@/lib/logger"
 import type { PlanTier } from "@/generated/prisma/client"
 
 export async function GET(req: NextRequest) {
-    const cronSecret = process.env.CRON_SECRET
-    const authHeader = req.headers.get("authorization")
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(req)
+    if (authError) return authError
 
     try {
-        // Load all products with keywords
+        // Load products with only needed fields (avoid over-fetching user data)
         const products = await prisma.product.findMany({
             where: { keywords: { isEmpty: false } },
-            include: { user: true },
+            select: {
+                id: true,
+                userId: true,
+                name: true,
+                description: true,
+                keywords: true,
+                targetAudience: true,
+            },
         })
 
         let totalLeadsCreated = 0
@@ -29,6 +35,7 @@ export async function GET(req: NextRequest) {
                 await resetUsageIfNeeded(product.userId)
                 const user = await prisma.user.findUnique({
                     where: { id: product.userId },
+                    select: { id: true, plan: true, leadsUsedThisMonth: true },
                 })
                 if (!user) continue
 
@@ -60,12 +67,6 @@ export async function GET(req: NextRequest) {
                     })
                     if (existing) continue
 
-                    // Re-check limit (may have incremented)
-                    const freshUser = await prisma.user.findUnique({
-                        where: { id: user.id },
-                    })
-                    if (!freshUser || freshUser.leadsUsedThisMonth >= leadLimit) break
-
                     const result = await scoreLead(
                         {
                             title: story.title,
@@ -85,6 +86,16 @@ export async function GET(req: NextRequest) {
                     )
 
                     if (result.score >= 0.3) {
+                        // Atomic check-and-increment to prevent race conditions
+                        const usageResult = await prisma.user.updateMany({
+                            where: {
+                                id: user.id,
+                                leadsUsedThisMonth: { lt: leadLimit },
+                            },
+                            data: { leadsUsedThisMonth: { increment: 1 } },
+                        })
+                        if (usageResult.count === 0) break // Limit reached
+
                         const lead = await prisma.lead.create({
                             data: {
                                 productId: product.id,
@@ -104,11 +115,6 @@ export async function GET(req: NextRequest) {
                                 sentiment: result.sentiment,
                                 platform: "HACKER_NEWS",
                             },
-                        })
-
-                        await prisma.user.update({
-                            where: { id: user.id },
-                            data: { leadsUsedThisMonth: { increment: 1 } },
                         })
 
                         totalLeadsCreated++
@@ -138,7 +144,7 @@ export async function GET(req: NextRequest) {
                     }
                 }
             } catch (error) {
-                console.error(`Error scanning HN for product ${product.name}:`, error)
+                logger.error(`Error scanning HN for product ${product.name}`, error)
             }
         }
 
@@ -147,7 +153,7 @@ export async function GET(req: NextRequest) {
             leadsCreated: totalLeadsCreated,
         })
     } catch (error) {
-        console.error("HN cron scan error:", error)
+        logger.error("HN cron scan error", error)
         return NextResponse.json({ error: "Internal error" }, { status: 500 })
     }
 }

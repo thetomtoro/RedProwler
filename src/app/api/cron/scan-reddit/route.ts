@@ -5,14 +5,13 @@ import { scoreLead } from "@/lib/scoring"
 import { PLAN_LIMITS } from "@/constants"
 import { resetUsageIfNeeded } from "@/lib/auth-helpers"
 import { createNotification, sendSlackNotification, fireWebhooks } from "@/lib/notifications"
+import { verifyCronAuth } from "@/lib/cron-auth"
+import { logger } from "@/lib/logger"
 import type { PlanTier } from "@/generated/prisma/client"
 
 export async function GET(req: NextRequest) {
-    const cronSecret = process.env.CRON_SECRET
-    const authHeader = req.headers.get("authorization")
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(req)
+    if (authError) return authError
 
     try {
         // ─── Lead Discovery ───
@@ -20,7 +19,12 @@ export async function GET(req: NextRequest) {
         const productSubreddits = await prisma.productSubreddit.findMany({
             where: { isActive: true },
             include: {
-                product: true,
+                product: {
+                    select: {
+                        id: true, userId: true, name: true,
+                        description: true, keywords: true, targetAudience: true,
+                    },
+                },
                 subreddit: true,
             },
         })
@@ -49,15 +53,16 @@ export async function GET(req: NextRequest) {
                     for (const link of links) {
                         const product = link.product
 
-                        // Reset usage if new billing period, then check limit
+                        // Reset usage if new billing period
                         await resetUsageIfNeeded(product.userId)
-                        const user = await prisma.user.findUnique({
-                            where: { id: product.userId },
-                        })
-                        if (!user) continue
 
-                        const leadLimit = PLAN_LIMITS[user.plan as PlanTier].leadsPerMonth
-                        if (user.leadsUsedThisMonth >= leadLimit) continue
+                        // Atomic check-and-increment to prevent race conditions
+                        const leadLimit = PLAN_LIMITS[
+                            (await prisma.user.findUnique({
+                                where: { id: product.userId },
+                                select: { plan: true },
+                            }))?.plan as PlanTier ?? "FREE"
+                        ].leadsPerMonth
 
                         const result = await scoreLead(
                             {
@@ -77,6 +82,16 @@ export async function GET(req: NextRequest) {
                         )
 
                         if (result.score >= 0.3) {
+                            // Atomically check limit and increment
+                            const usageResult = await prisma.user.updateMany({
+                                where: {
+                                    id: product.userId,
+                                    leadsUsedThisMonth: { lt: leadLimit },
+                                },
+                                data: { leadsUsedThisMonth: { increment: 1 } },
+                            })
+                            if (usageResult.count === 0) continue // Limit reached
+
                             const lead = await prisma.lead.create({
                                 data: {
                                     productId: product.id,
@@ -97,17 +112,12 @@ export async function GET(req: NextRequest) {
                                 },
                             })
 
-                            await prisma.user.update({
-                                where: { id: user.id },
-                                data: { leadsUsedThisMonth: { increment: 1 } },
-                            })
-
                             totalLeadsCreated++
 
                             // Notify on high-relevance leads
                             if (result.score >= 0.8) {
                                 await createNotification({
-                                    recipientId: user.id,
+                                    recipientId: product.userId,
                                     type: "HIGH_RELEVANCE_LEAD",
                                     title: `High-relevance lead in r/${subredditName}`,
                                     body: post.title,
@@ -115,11 +125,11 @@ export async function GET(req: NextRequest) {
                                     referenceType: "Lead",
                                 })
 
-                                await sendSlackNotification(user.id, {
+                                await sendSlackNotification(product.userId, {
                                     text: `🎯 High-relevance lead (${(result.score * 100).toFixed(0)}%) in r/${subredditName}: ${post.title}`,
                                 })
 
-                                await fireWebhooks(user.id, "lead.high_relevance", {
+                                await fireWebhooks(product.userId, "lead.high_relevance", {
                                     leadId: lead.id,
                                     title: post.title,
                                     subreddit: subredditName,
@@ -136,7 +146,7 @@ export async function GET(req: NextRequest) {
                     data: { lastScannedAt: new Date() },
                 })
             } catch (error) {
-                console.error(`Error scanning r/${subredditName}:`, error)
+                logger.error(`Error scanning r/${subredditName}`, error)
             }
         }
 
@@ -249,7 +259,7 @@ export async function GET(req: NextRequest) {
                     }
                 }
             } catch (error) {
-                console.error(`Error scanning competitors in r/${subredditName}:`, error)
+                logger.error(`Error scanning competitors in r/${subredditName}`, error)
             }
         }
 
@@ -260,7 +270,7 @@ export async function GET(req: NextRequest) {
             competitorMentionsCreated: totalMentionsCreated,
         })
     } catch (error) {
-        console.error("Cron scan error:", error)
+        logger.error("Cron scan error", error)
         return NextResponse.json(
             { error: "Internal error" },
             { status: 500 }

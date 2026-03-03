@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { withErrorHandler, successResponse, ApiError } from "@/lib/api-helpers"
 import { requirePlan, checkPlanLimit } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import { checkRateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
 const inviteSchema = z.object({
@@ -27,6 +28,13 @@ export const GET = withErrorHandler(async () => {
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
     const user = await requirePlan("TEAM")
+
+    // Rate limit invite attempts to prevent email enumeration
+    const rl = checkRateLimit(`team-invite:${user.id}`, 10, 60_000)
+    if (!rl.allowed) {
+        throw new ApiError(429, "Too many invite attempts. Please wait before trying again.")
+    }
+
     const body = await req.json()
     const data = inviteSchema.parse(body)
 
@@ -36,12 +44,12 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     })
     checkPlanLimit(user.plan, "teamMembers", currentCount)
 
-    // Find user by email
+    // Find user by email — return generic error to prevent enumeration
     const invitee = await prisma.user.findUnique({
         where: { email: data.email },
     })
     if (!invitee) {
-        throw new ApiError(404, "User not found. They need to sign up first.")
+        throw new ApiError(400, "Unable to invite this user. Ensure they have a RedProwler account.")
     }
     if (invitee.id === user.id) {
         throw new ApiError(400, "You can't invite yourself")
@@ -55,7 +63,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
             },
         },
     })
-    if (existing) throw new ApiError(409, "User is already a team member")
+    if (existing) throw new ApiError(400, "Unable to invite this user. Ensure they have a RedProwler account.")
 
     const member = await prisma.teamMember.create({
         data: {

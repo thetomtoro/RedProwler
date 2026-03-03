@@ -2,13 +2,12 @@ import { NextRequest } from "next/server"
 import { withErrorHandler, successResponse } from "@/lib/api-helpers"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import { templateFilterSchema } from "@/lib/validators"
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
     const user = await requireAuth()
-    const params = req.nextUrl.searchParams
-
-    const category = params.get("category")
-    const search = params.get("search")
+    const params = Object.fromEntries(req.nextUrl.searchParams)
+    const { category, search } = templateFilterSchema.parse(params)
 
     const templates = await prisma.template.findMany({
         where: {

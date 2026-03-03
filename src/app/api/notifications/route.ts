@@ -4,14 +4,18 @@ import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+const notificationQuerySchema = z.object({
+    unread: z.enum(["true", "false"]).optional(),
+    cursor: z.string().max(100).optional(),
+    limit: z.coerce.number().min(1).max(50).default(20),
+})
+
 export const GET = withErrorHandler(async (req: NextRequest) => {
     const user = await requireAuth()
 
-    const url = new URL(req.url)
-    const unreadOnly = url.searchParams.get("unread") === "true"
-    const cursor = url.searchParams.get("cursor") ?? undefined
-    const parsedLimit = parseInt(url.searchParams.get("limit") ?? "20")
-    const limit = Math.min(Number.isNaN(parsedLimit) ? 20 : Math.max(1, parsedLimit), 50)
+    const params = Object.fromEntries(req.nextUrl.searchParams)
+    const { unread, cursor, limit } = notificationQuerySchema.parse(params)
+    const unreadOnly = unread === "true"
 
     const notifications = await prisma.notification.findMany({
         where: {
@@ -37,7 +41,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 })
 
 const markReadSchema = z.object({
-    ids: z.array(z.string()).min(1).max(100).optional(),
+    ids: z.array(z.string().max(100)).min(1).max(100).optional(),
     all: z.boolean().optional(),
 })
 

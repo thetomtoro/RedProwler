@@ -1,4 +1,5 @@
 import { createMessage } from "@/lib/ai"
+import { logger } from "@/lib/logger"
 import { getLeadScoringPrompt } from "@/lib/prompts"
 import { MODELS } from "@/constants"
 
@@ -142,7 +143,7 @@ export async function scoreLead(
             }
         }
     } catch (error) {
-        console.error("AI scoring failed, falling back to pre-score:", error)
+        logger.error("AI scoring failed, falling back to pre-score", error)
     }
 
     return {

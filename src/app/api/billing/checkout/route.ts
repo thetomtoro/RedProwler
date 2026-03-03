@@ -3,6 +3,7 @@ import { withErrorHandler, successResponse, ApiError } from "@/lib/api-helpers"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { getStripe, STRIPE_PLANS, createCheckoutSession } from "@/lib/stripe"
+import { checkRateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
 const checkoutSchema = z.object({
@@ -11,6 +12,13 @@ const checkoutSchema = z.object({
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
     const user = await requireAuth()
+
+    // Rate limit: 5 checkout sessions per minute per user
+    const rl = checkRateLimit(`checkout:${user.id}`, 5, 60_000)
+    if (!rl.allowed) {
+        throw new ApiError(429, "Too many requests. Please wait before trying again.")
+    }
+
     const body = await req.json()
     const { plan } = checkoutSchema.parse(body)
 
