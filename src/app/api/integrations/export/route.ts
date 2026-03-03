@@ -10,12 +10,25 @@ export async function GET(req: NextRequest) {
 
         const productId = req.nextUrl.searchParams.get("productId")
 
-        const productIds = productId
-            ? [productId]
-            : (await prisma.product.findMany({
-                where: { userId: user.id },
-                select: { id: true },
-            })).map((p) => p.id)
+        // Always scope to user's own products to prevent IDOR
+        const userProducts = await prisma.product.findMany({
+            where: { userId: user.id },
+            select: { id: true },
+        })
+        const userProductIds = new Set(userProducts.map((p) => p.id))
+
+        let productIds: string[]
+        if (productId) {
+            if (!userProductIds.has(productId)) {
+                return NextResponse.json(
+                    { error: { code: "403", message: "Forbidden" } },
+                    { status: 403 }
+                )
+            }
+            productIds = [productId]
+        } else {
+            productIds = [...userProductIds]
+        }
 
         if (productIds.length === 0) {
             return NextResponse.json(
@@ -39,11 +52,20 @@ export async function GET(req: NextRequest) {
             "Status", "Sentiment", "Reddit Score", "Comments", "Permalink", "Created At",
         ]
 
+        // Sanitize CSV values to prevent formula injection (=, +, -, @, \t, \r)
+        const sanitizeCsvValue = (val: string | number): string => {
+            const str = String(val).replace(/"/g, '""')
+            if (/^[=+\-@\t\r]/.test(str)) {
+                return `'${str}`
+            }
+            return str
+        }
+
         const rows = leads.map((l) => [
             l.id,
             l.product.name,
             `r/${l.subreddit.name}`,
-            (l.title || "").replace(/"/g, '""'),
+            l.title || "",
             l.author,
             l.relevanceScore.toFixed(2),
             l.status,
@@ -54,7 +76,7 @@ export async function GET(req: NextRequest) {
             l.createdAt.toISOString(),
         ])
 
-        const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${v}"`).join(","))].join("\n")
+        const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${sanitizeCsvValue(v)}"`).join(","))].join("\n")
 
         return new Response(csv, {
             headers: {

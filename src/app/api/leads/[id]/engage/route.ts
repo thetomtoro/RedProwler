@@ -31,9 +31,17 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
         const body = await req.json()
         const { type, tone } = generateReplySchema.parse(body)
 
-        // Check AI generation limit
+        // Atomically check and increment AI usage to prevent race conditions
         const limit = PLAN_LIMITS[user.plan].aiGenerationsPerMonth
-        if (user.aiCreditsUsedThisMonth >= limit) {
+        const updatedUser = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                aiCreditsUsedThisMonth: { lt: limit },
+            },
+            data: { aiCreditsUsedThisMonth: { increment: 1 } },
+        })
+
+        if (updatedUser.count === 0) {
             return NextResponse.json(
                 { error: { message: "AI generation limit reached. Upgrade your plan." } },
                 { status: 403 }
@@ -85,12 +93,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
                 userMessage = getDMTemplatePrompt(leadContext, product)
                 break
         }
-
-        // Increment AI usage
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { aiCreditsUsedThisMonth: { increment: 1 } },
-        })
 
         // Update lead status
         await prisma.lead.update({

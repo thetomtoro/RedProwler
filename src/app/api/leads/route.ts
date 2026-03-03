@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { withErrorHandler, successResponse } from "@/lib/api-helpers"
+import { withErrorHandler, successResponse, ApiError } from "@/lib/api-helpers"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { leadFilterSchema } from "@/lib/validators"
@@ -15,6 +15,11 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
         select: { id: true },
     })
     const productIds = userProducts.map((p) => p.id)
+
+    // Validate productId belongs to current user (prevents IDOR)
+    if (filters.productId && !productIds.includes(filters.productId)) {
+        throw new ApiError(403, "Forbidden")
+    }
 
     const where = {
         productId: { in: filters.productId ? [filters.productId] : productIds },

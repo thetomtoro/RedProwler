@@ -10,7 +10,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     const url = new URL(req.url)
     const unreadOnly = url.searchParams.get("unread") === "true"
     const cursor = url.searchParams.get("cursor") ?? undefined
-    const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "20"), 50)
+    const parsedLimit = parseInt(url.searchParams.get("limit") ?? "20")
+    const limit = Math.min(Number.isNaN(parsedLimit) ? 20 : Math.max(1, parsedLimit), 50)
 
     const notifications = await prisma.notification.findMany({
         where: {

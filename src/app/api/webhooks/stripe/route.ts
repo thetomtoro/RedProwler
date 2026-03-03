@@ -3,6 +3,13 @@ import { getStripe } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 import type { PlanTier } from "@/generated/prisma/client"
 
+function resolvePlan(priceId: string | undefined): PlanTier | null {
+    if (priceId === process.env.STRIPE_PRO_PRICE_ID) return "PRO"
+    if (priceId === process.env.STRIPE_TEAM_PRICE_ID) return "TEAM"
+    console.error(`Unknown Stripe price ID: ${priceId}`)
+    return null
+}
+
 export async function POST(req: NextRequest) {
     const body = await req.text()
     const signature = req.headers.get("stripe-signature")
@@ -28,10 +35,8 @@ export async function POST(req: NextRequest) {
                 const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
                 const priceId = subscription.items.data[0]?.price.id
 
-                let plan: PlanTier = "PRO"
-                if (priceId === process.env.STRIPE_TEAM_PRICE_ID) {
-                    plan = "TEAM"
-                }
+                const plan = resolvePlan(priceId)
+                if (!plan) break
 
                 await prisma.user.update({
                     where: { id: userId },
@@ -56,10 +61,8 @@ export async function POST(req: NextRequest) {
 
             if (user) {
                 const priceId = subscription.items.data[0]?.price.id
-                let plan: PlanTier = "PRO"
-                if (priceId === process.env.STRIPE_TEAM_PRICE_ID) {
-                    plan = "TEAM"
-                }
+                const plan = resolvePlan(priceId)
+                if (!plan) break
 
                 await prisma.user.update({
                     where: { id: user.id },
