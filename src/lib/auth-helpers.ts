@@ -83,3 +83,30 @@ export function checkPlanLimit(
         )
     }
 }
+
+export async function resetUsageIfNeeded(userId: string): Promise<void> {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, usageResetAt: true },
+    })
+    if (!user) return
+
+    const now = new Date()
+
+    if (!user.usageResetAt || user.usageResetAt <= now) {
+        const nextReset = new Date(Date.UTC(
+            now.getUTCMonth() === 11 ? now.getUTCFullYear() + 1 : now.getUTCFullYear(),
+            now.getUTCMonth() === 11 ? 0 : now.getUTCMonth() + 1,
+            1, 0, 0, 0
+        ))
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                leadsUsedThisMonth: 0,
+                aiCreditsUsedThisMonth: 0,
+                usageResetAt: nextReset,
+            },
+        })
+    }
+}

@@ -6,6 +6,7 @@ import { getReplyGenerationPrompt, getConversationStarterPrompt, getDMTemplatePr
 import { generateReplySchema } from "@/lib/validators"
 import { MODELS } from "@/constants"
 import { PLAN_LIMITS } from "@/constants"
+import { resetUsageIfNeeded } from "@/lib/auth-helpers"
 
 export async function POST(req: NextRequest, ctx: { params: Promise<Record<string, string>> }) {
     try {
@@ -14,7 +15,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<Record<strin
             return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 })
         }
 
-        const user = await prisma.user.findUnique({ where: { clerkId } })
+        let user = await prisma.user.findUnique({ where: { clerkId } })
+        if (!user) {
+            return NextResponse.json({ error: { message: "User not found" } }, { status: 401 })
+        }
+
+        // Reset usage counters if new billing period
+        await resetUsageIfNeeded(user.id)
+        user = await prisma.user.findUnique({ where: { clerkId } })
         if (!user) {
             return NextResponse.json({ error: { message: "User not found" } }, { status: 401 })
         }

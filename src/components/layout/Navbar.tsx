@@ -1,8 +1,9 @@
 "use client"
 
 import { UserButton } from "@clerk/nextjs"
-import { Bell, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/Input"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 
 export function Navbar() {
     return (
@@ -20,11 +21,7 @@ export function Navbar() {
 
             {/* Right side */}
             <div className="flex items-center gap-4">
-                {/* Notifications */}
-                <button className="relative p-2 text-text-secondary hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-colors cursor-pointer">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full shadow-[0_0_6px_rgba(230,57,70,0.4)]" />
-                </button>
+                <NotificationBell />
 
                 {/* User */}
                 <UserButton
