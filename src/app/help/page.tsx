@@ -1,75 +1,14 @@
 import { LandingNavbar } from "@/components/landing/LandingNavbar"
 import { LandingFooter } from "@/components/landing/LandingFooter"
-import { Search, Rocket, Target, Zap, CreditCard, Link2, Users } from "lucide-react"
+import { helpCategories } from "@/data/help-articles"
+import { Search } from "lucide-react"
+import Link from "next/link"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
     title: "Help Center — RedProwler",
     description: "Get help with RedProwler. Guides for getting started, lead discovery, AI engagement, billing, and more.",
 }
-
-const categories = [
-    {
-        icon: Rocket,
-        title: "Getting Started",
-        articles: [
-            "Creating your account",
-            "Setting up your first product",
-            "Choosing target subreddits",
-            "Understanding the dashboard",
-        ],
-    },
-    {
-        icon: Target,
-        title: "Lead Discovery",
-        articles: [
-            "How lead scoring works",
-            "Two-phase scoring explained",
-            "Filtering and sorting leads",
-            "Understanding relevance scores",
-        ],
-    },
-    {
-        icon: Zap,
-        title: "AI Engagement",
-        articles: [
-            "Generating AI replies",
-            "Using reply templates",
-            "Customizing tone and style",
-            "Best practices for Reddit replies",
-        ],
-    },
-    {
-        icon: CreditCard,
-        title: "Billing & Plans",
-        articles: [
-            "Plan comparison and limits",
-            "Upgrading your plan",
-            "Managing your subscription",
-            "Understanding usage resets",
-        ],
-    },
-    {
-        icon: Link2,
-        title: "Integrations",
-        articles: [
-            "Setting up Slack notifications",
-            "Configuring custom webhooks",
-            "Exporting leads to CSV",
-            "Webhook event reference",
-        ],
-    },
-    {
-        icon: Users,
-        title: "Teams",
-        articles: [
-            "Inviting team members",
-            "Team roles and permissions",
-            "Managing your team",
-            "Team plan features",
-        ],
-    },
-]
 
 export default function HelpPage() {
     return (
@@ -96,7 +35,7 @@ export default function HelpPage() {
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {categories.map((category) => (
+                    {helpCategories.map((category) => (
                         <div
                             key={category.title}
                             className="p-6 rounded-xl border border-border bg-bg-secondary/50 hover:border-border-hover transition-colors"
@@ -105,10 +44,13 @@ export default function HelpPage() {
                             <h2 className="font-semibold text-text-primary mb-4">{category.title}</h2>
                             <ul className="space-y-2.5">
                                 {category.articles.map((article) => (
-                                    <li key={article}>
-                                        <span className="text-sm text-text-secondary hover:text-accent transition-colors cursor-pointer">
-                                            {article}
-                                        </span>
+                                    <li key={article.slug}>
+                                        <Link
+                                            href={`/help/${article.slug}`}
+                                            className="text-sm text-text-secondary hover:text-accent transition-colors"
+                                        >
+                                            {article.title}
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
