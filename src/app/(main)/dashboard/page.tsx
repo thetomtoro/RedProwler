@@ -22,7 +22,7 @@ interface Lead {
     relevanceScore: number
     status: string
     createdAt: string
-    subreddit: { name: string }
+    subreddit: { name: string } | null
     product: { name: string }
 }
 
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             <div>
                 <h1 className="text-2xl font-bold">Dashboard</h1>
                 <p className="text-text-secondary mt-1">
-                    Overview of your Reddit lead generation performance.
+                    Overview of your lead generation performance.
                 </p>
             </div>
 
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                                 </div>
                                 <p className="text-text-secondary font-medium">No leads yet</p>
                                 <p className="text-text-tertiary text-sm mt-1">
-                                    Add a product and target subreddits to start discovering leads.
+                                    Add a product to start discovering leads from Reddit and Hacker News.
                                 </p>
                                 <Link href="/products/new" className="mt-3">
                                     <Button variant="primary" size="sm">Add Product</Button>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                                                     {lead.title || truncate(lead.body, 60)}
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-text-tertiary">r/{lead.subreddit.name}</span>
+                                                    <span className="text-xs text-text-tertiary">{lead.subreddit ? `r/${lead.subreddit.name}` : "HN"}</span>
                                                     <Badge variant={lead.relevanceScore >= 0.7 ? "success" : lead.relevanceScore >= 0.4 ? "warning" : "default"}>
                                                         {Math.round(lead.relevanceScore * 100)}%
                                                     </Badge>

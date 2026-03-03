@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button"
 import { Target, ExternalLink, Bookmark, MessageSquareText } from "lucide-react"
 import { formatRelativeTime, truncate } from "@/lib/utils"
 import Link from "next/link"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 interface Lead {
@@ -23,7 +24,8 @@ interface Lead {
     status: string
     isBookmarked: boolean
     createdAt: string
-    subreddit: { name: string; displayName: string }
+    platform: string
+    subreddit: { name: string; displayName: string } | null
     product: { name: string }
     _count: { engagements: number }
 }
@@ -44,11 +46,22 @@ function StatusBadge({ status }: { status: string }) {
     return <Badge variant={variants[status] || "default"}>{status}</Badge>
 }
 
+function PlatformBadge({ platform }: { platform: string }) {
+    if (platform === "HACKER_NEWS") {
+        return <Badge variant="warning">HN</Badge>
+    }
+    return <Badge variant="accent">Reddit</Badge>
+}
+
 export default function LeadsPage() {
+    const [platformFilter, setPlatformFilter] = useState<string>("")
+
     const { data, isLoading } = useQuery({
-        queryKey: ["leads"],
+        queryKey: ["leads", platformFilter],
         queryFn: async () => {
-            const res = await fetch("/api/leads?limit=20")
+            const params = new URLSearchParams({ limit: "20" })
+            if (platformFilter) params.set("platform", platformFilter)
+            const res = await fetch(`/api/leads?${params}`)
             const json = await res.json()
             return json.data as Lead[]
         },
@@ -60,8 +73,23 @@ export default function LeadsPage() {
                 <div>
                     <h1 className="text-2xl font-bold">Leads</h1>
                     <p className="text-text-secondary mt-1">
-                        Discovered leads from your targeted subreddits.
+                        Discovered leads from your targeted subreddits and Hacker News.
                     </p>
+                </div>
+                <div className="flex gap-2">
+                    {["", "REDDIT", "HACKER_NEWS"].map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPlatformFilter(p)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                                platformFilter === p
+                                    ? "bg-accent-muted text-accent"
+                                    : "bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                            }`}
+                        >
+                            {p === "" ? "All" : p === "REDDIT" ? "Reddit" : "Hacker News"}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -99,7 +127,10 @@ export default function LeadsPage() {
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs text-text-tertiary">r/{lead.subreddit.name}</span>
+                                        <span className="text-xs text-text-tertiary">
+                                            {lead.platform === "HACKER_NEWS" ? "Hacker News" : `r/${lead.subreddit?.name}`}
+                                        </span>
+                                        <PlatformBadge platform={lead.platform} />
                                         <ScoreBadge score={lead.relevanceScore} />
                                         <StatusBadge status={lead.status} />
                                     </div>
@@ -120,7 +151,7 @@ export default function LeadsPage() {
                                 </div>
                                 <div className="flex flex-col items-end gap-2 shrink-0">
                                     <a
-                                        href={`https://reddit.com${lead.permalink}`}
+                                        href={lead.platform === "HACKER_NEWS" ? lead.permalink : `https://reddit.com${lead.permalink}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

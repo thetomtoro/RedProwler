@@ -40,7 +40,8 @@ interface Lead {
     redditType: string
     redditCreatedAt: string
     createdAt: string
-    subreddit: { name: string; displayName: string }
+    platform: string
+    subreddit: { name: string; displayName: string } | null
     product: { name: string }
     engagements: Array<{
         id: string
@@ -175,7 +176,9 @@ export default function LeadDetailPage() {
                 </Link>
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm text-text-tertiary">r/{lead.subreddit.name}</span>
+                        <span className="text-sm text-text-tertiary">
+                            {lead.platform === "HACKER_NEWS" ? "Hacker News" : `r/${lead.subreddit?.name}`}
+                        </span>
                         {scoreBadge(lead.relevanceScore)}
                         <Badge variant="default">{lead.status}</Badge>
                     </div>
@@ -196,12 +199,13 @@ export default function LeadDetailPage() {
                         )}
                     </Button>
                     <a
-                        href={`https://reddit.com${lead.permalink}`}
+                        href={lead.platform === "HACKER_NEWS" ? lead.permalink : `https://reddit.com${lead.permalink}`}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
                         <Button variant="secondary" size="sm">
-                            <ExternalLink className="w-3.5 h-3.5" /> View on Reddit
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            {lead.platform === "HACKER_NEWS" ? "View on HN" : "View on Reddit"}
                         </Button>
                     </a>
                 </div>
