@@ -25,9 +25,9 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' https://img.clerk.com data: blob:",
-              "font-src 'self' data:",
+              "font-src 'self' https://fonts.gstatic.com data:",
               "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com",
               "frame-src https://js.stripe.com https://*.clerk.accounts.dev",
               "worker-src 'self' blob:",
