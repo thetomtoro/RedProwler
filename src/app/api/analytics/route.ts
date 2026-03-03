@@ -21,11 +21,12 @@ export const GET = withErrorHandler(async () => {
             leadsOverTime: [],
             statusBreakdown: [],
             subredditBreakdown: [],
+            platformBreakdown: [],
         })
     }
 
     // Aggregate stats
-    const [totalLeads, totalEngagements, conversions, statusCounts, subredditCounts, leadsOverTime] =
+    const [totalLeads, totalEngagements, conversions, statusCounts, subredditCounts, leadsOverTime, platformCounts] =
         await Promise.all([
             prisma.lead.count({ where: { productId: { in: productIds } } }),
             prisma.engagement.count({ where: { userId: user.id } }),
@@ -53,6 +54,11 @@ export const GET = withErrorHandler(async () => {
                 GROUP BY DATE(created_at)
                 ORDER BY date ASC
             ` as Promise<Array<{ date: string; count: number }>>,
+            prisma.lead.groupBy({
+                by: ["platform"],
+                where: { productId: { in: productIds } },
+                _count: { id: true },
+            }),
         ])
 
     // Get subreddit names for breakdown
@@ -78,6 +84,10 @@ export const GET = withErrorHandler(async () => {
         subredditBreakdown: subredditCounts.map((s) => ({
             subreddit: (s.subredditId && subMap[s.subredditId]) || "unknown",
             count: s._count.id,
+        })),
+        platformBreakdown: platformCounts.map((p) => ({
+            platform: p.platform,
+            count: p._count.id,
         })),
     })
 })
