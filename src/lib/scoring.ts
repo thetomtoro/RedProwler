@@ -9,6 +9,7 @@ interface ScoringInput {
     author: string
     redditScore: number
     commentCount: number
+    platform?: "REDDIT" | "HACKER_NEWS"
 }
 
 interface ProductInput {
@@ -79,6 +80,11 @@ function keywordPreScore(post: ScoringInput, product: ProductInput): number {
     if (post.commentCount > 5) score += 0.02
     if (post.commentCount > 20) score += 0.03
 
+    // Ask HN posts are inherently help-seeking
+    if (post.platform === "HACKER_NEWS" && post.title?.toLowerCase().startsWith("ask hn")) {
+        score += 0.05
+    }
+
     return Math.min(score, 0.5)
 }
 
@@ -108,6 +114,7 @@ export async function scoreLead(
                 author: post.author,
                 redditScore: post.redditScore,
                 commentCount: post.commentCount,
+                platform: post.platform,
             },
             {
                 name: product.name,

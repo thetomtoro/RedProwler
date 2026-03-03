@@ -12,6 +12,7 @@ interface LeadContext {
     author: string
     redditScore: number
     commentCount: number
+    platform?: string
 }
 
 export function getSubredditRecommendationPrompt(product: ProductContext): string {
@@ -50,8 +51,8 @@ Name: ${product.name}
 Description: ${product.description}
 Keywords: ${product.keywords.join(", ")}
 
-REDDIT POST:
-Subreddit: r/${lead.subreddit}
+${lead.platform === "HACKER_NEWS" ? "HACKER NEWS POST:" : "REDDIT POST:"}
+${lead.platform === "HACKER_NEWS" ? "Source: Hacker News" : `Subreddit: r/${lead.subreddit}`}
 Title: ${lead.title || "N/A"}
 Body: ${lead.body}
 Score: ${lead.redditScore} | Comments: ${lead.commentCount}
@@ -79,7 +80,7 @@ export function getReplyGenerationPrompt(
     return `You are a skilled Reddit community member who also happens to know about a relevant product. Write a natural, helpful reply to the following Reddit post.
 
 CONTEXT:
-Subreddit: r/${lead.subreddit}
+${lead.platform === "HACKER_NEWS" ? "Source: Hacker News" : `Subreddit: r/${lead.subreddit}`}
 Post Title: ${lead.title || "N/A"}
 Post Body: ${lead.body}
 
@@ -105,7 +106,7 @@ export function getConversationStarterPrompt(lead: LeadContext, product: Product
     return `Generate 3 different conversation starters for engaging with this Reddit post. Each should take a different approach.
 
 POST:
-Subreddit: r/${lead.subreddit}
+${lead.platform === "HACKER_NEWS" ? "Source: Hacker News" : `Subreddit: r/${lead.subreddit}`}
 Title: ${lead.title || "N/A"}
 Body: ${lead.body}
 
@@ -131,7 +132,7 @@ export function getDMTemplatePrompt(lead: LeadContext, product: ProductContext):
     return `Write a friendly, non-spammy Reddit DM to this user based on their post. The goal is to start a genuine conversation, not to hard-sell.
 
 THEIR POST:
-Subreddit: r/${lead.subreddit}
+${lead.platform === "HACKER_NEWS" ? "Source: Hacker News" : `Subreddit: r/${lead.subreddit}`}
 Title: ${lead.title || "N/A"}
 Body: ${lead.body}
 
