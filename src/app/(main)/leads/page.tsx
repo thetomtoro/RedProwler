@@ -83,7 +83,7 @@ export default function LeadsPage() {
                         </div>
                         <p className="text-text-secondary font-medium text-lg">No leads yet</p>
                         <p className="text-text-tertiary text-sm mt-1 max-w-md">
-                            Add a product and target subreddits. RedPulse will start finding relevant leads automatically.
+                            Add a product and target subreddits. RedProwler will start finding relevant leads automatically.
                         </p>
                         <Link href="/products/new" className="mt-4">
                             <Button variant="primary" size="sm">Add Product</Button>

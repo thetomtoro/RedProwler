@@ -70,7 +70,7 @@ export function Features() {
                         Everything You Need to Win on Reddit
                     </h2>
                     <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-                        More than just a monitoring tool. RedPulse is your complete Reddit growth engine.
+                        More than just a monitoring tool. RedProwler is your complete Reddit growth engine.
                     </p>
                 </div>
 

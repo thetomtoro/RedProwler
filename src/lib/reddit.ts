@@ -50,7 +50,7 @@ class RedditClient {
 
         const clientId = process.env.REDDIT_CLIENT_ID!
         const clientSecret = process.env.REDDIT_CLIENT_SECRET!
-        const userAgent = process.env.REDDIT_USER_AGENT || "RedPulse/1.0"
+        const userAgent = process.env.REDDIT_USER_AGENT || "RedProwler/1.0"
 
         const response = await fetch("https://www.reddit.com/api/v1/access_token", {
             method: "POST",
@@ -90,7 +90,7 @@ class RedditClient {
     private async request<T>(endpoint: string): Promise<T> {
         await this.throttle()
         const token = await this.ensureToken()
-        const userAgent = process.env.REDDIT_USER_AGENT || "RedPulse/1.0"
+        const userAgent = process.env.REDDIT_USER_AGENT || "RedProwler/1.0"
 
         const response = await fetch(`https://oauth.reddit.com${endpoint}`, {
             headers: {

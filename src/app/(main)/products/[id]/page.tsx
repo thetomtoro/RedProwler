@@ -287,7 +287,7 @@ export default function ProductDetailPage() {
                     <div>
                         <h2 className="text-lg font-semibold">Targeted Subreddits</h2>
                         <p className="text-sm text-text-secondary">
-                            RedPulse monitors these subreddits for leads matching your product.
+                            RedProwler monitors these subreddits for leads matching your product.
                         </p>
                     </div>
                     <div className="flex items-center gap-2">

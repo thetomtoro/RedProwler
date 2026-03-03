@@ -5,7 +5,7 @@ const testimonials = [
         name: "Alex Chen",
         role: "SaaS Founder",
         metric: "3x Site Traffic",
-        quote: "RedPulse found leads I would have never discovered manually. Within one month, my site traffic tripled and I closed $2,400 in new MRR directly from Reddit conversations.",
+        quote: "RedProwler found leads I would have never discovered manually. Within one month, my site traffic tripled and I closed $2,400 in new MRR directly from Reddit conversations.",
         stars: 5,
     },
     {
@@ -19,7 +19,7 @@ const testimonials = [
         name: "James Park",
         role: "Growth Marketer",
         metric: "50% Lower CAC",
-        quote: "We switched from paid ads to RedPulse-powered Reddit marketing. Our customer acquisition cost dropped by half and the leads are way higher quality.",
+        quote: "We switched from paid ads to RedProwler-powered Reddit marketing. Our customer acquisition cost dropped by half and the leads are way higher quality.",
         stars: 5,
     },
     {
@@ -44,10 +44,10 @@ export function Testimonials() {
                         <span className="text-xs font-mono text-accent uppercase tracking-widest">Results</span>
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                        Founders Love RedPulse
+                        Founders Love RedProwler
                     </h2>
                     <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-                        See how founders and marketers are using RedPulse to grow their businesses.
+                        See how founders and marketers are using RedProwler to grow their businesses.
                     </p>
                 </div>
 

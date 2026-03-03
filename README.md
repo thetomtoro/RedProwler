@@ -1,4 +1,4 @@
-# RedPulse
+# RedProwler
 
 AI-powered Reddit lead generation platform for founders and marketers. Discover high-intent conversations, generate personalized replies, and convert Reddit users into customers.
 
@@ -50,8 +50,8 @@ AI-powered Reddit lead generation platform for founders and marketers. Discover 
 1. **Clone the repo**
 
 ```bash
-git clone https://github.com/thetomtoro/RedPulse.git
-cd RedPulse
+git clone https://github.com/thetomtoro/RedProwler.git
+cd RedProwler
 ```
 
 2. **Install dependencies**

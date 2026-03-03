@@ -52,7 +52,7 @@ export function LandingNavbar() {
                             <RadarLogo />
                         </span>
                         <span className="text-lg font-bold font-[var(--font-display)] tracking-tight text-text-primary">
-                            Red<span className="text-accent">Pulse</span>
+                            Red<span className="text-accent">Prowler</span>
                         </span>
                     </Link>
 

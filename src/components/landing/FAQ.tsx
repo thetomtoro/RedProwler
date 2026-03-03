@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils"
 
 const faqs = [
     {
-        question: "How does RedPulse find leads on Reddit?",
-        answer: "RedPulse uses Reddit's official API to monitor your targeted subreddits 24/7. Our two-phase scoring system first filters posts using keyword matching and intent signals, then uses AI to score only the most promising leads for relevance. This means you only see high-quality prospects, not noise.",
+        question: "How does RedProwler find leads on Reddit?",
+        answer: "RedProwler uses Reddit's official API to monitor your targeted subreddits 24/7. Our two-phase scoring system first filters posts using keyword matching and intent signals, then uses AI to score only the most promising leads for relevance. This means you only see high-quality prospects, not noise.",
     },
     {
-        question: "Will using RedPulse get my Reddit account banned?",
-        answer: "No. RedPulse is designed to work within Reddit's terms of service. We use the official Reddit API, never automate posting, and never use black-hat techniques. RedPulse generates reply suggestions that you review and post yourself — keeping you in full control.",
+        question: "Will using RedProwler get my Reddit account banned?",
+        answer: "No. RedProwler is designed to work within Reddit's terms of service. We use the official Reddit API, never automate posting, and never use black-hat techniques. RedProwler generates reply suggestions that you review and post yourself — keeping you in full control.",
     },
     {
         question: "What subreddits can I target?",
@@ -19,10 +19,10 @@ const faqs = [
     },
     {
         question: "How are the AI replies generated?",
-        answer: "RedPulse uses Claude AI to analyze each lead's context — the post content, subreddit culture, and your product description — to generate natural, helpful conversation starters. The replies are designed to be authentic and value-adding, not promotional spam.",
+        answer: "RedProwler uses Claude AI to analyze each lead's context — the post content, subreddit culture, and your product description — to generate natural, helpful conversation starters. The replies are designed to be authentic and value-adding, not promotional spam.",
     },
     {
-        question: "Can I use RedPulse with a team?",
+        question: "Can I use RedProwler with a team?",
         answer: "Yes! Our Team plan ($79/month) supports up to 10 team members with role-based access. Everyone shares the same lead feed, templates, and analytics dashboard.",
     },
     {

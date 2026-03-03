@@ -109,7 +109,7 @@ export default function OnboardingPage() {
             <div className="w-full max-w-2xl space-y-8">
                 {/* Logo */}
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold gradient-text">RedPulse</h1>
+                    <h1 className="text-3xl font-bold gradient-text">RedProwler</h1>
                     <p className="text-text-secondary mt-1">Let&apos;s get you set up in 2 minutes</p>
                 </div>
 
@@ -319,7 +319,7 @@ export default function OnboardingPage() {
                             </div>
 
                             <p className="text-text-tertiary text-sm">
-                                RedPulse will start monitoring these subreddits immediately and notify you when leads appear.
+                                RedProwler will start monitoring these subreddits immediately and notify you when leads appear.
                             </p>
 
                             <div className="flex justify-center gap-3">
@@ -332,7 +332,7 @@ export default function OnboardingPage() {
                                     disabled={loading}
                                 >
                                     {loading ? "Setting up..." : (
-                                        <><Rocket className="w-4 h-4" /> Launch RedPulse</>
+                                        <><Rocket className="w-4 h-4" /> Launch RedProwler</>
                                     )}
                                 </Button>
                             </div>

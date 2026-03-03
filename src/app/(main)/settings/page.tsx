@@ -83,7 +83,7 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
-            a.download = `redpulse-leads-${new Date().toISOString().split("T")[0]}.csv`
+            a.download = `redprowler-leads-${new Date().toISOString().split("T")[0]}.csv`
             a.click()
             URL.revokeObjectURL(url)
         },

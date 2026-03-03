@@ -14,7 +14,7 @@ const steps = [
         icon: Radar,
         title: "We Find Your Leads",
         description:
-            "RedPulse monitors Reddit 24/7, scanning thousands of posts and comments. Our two-phase AI scoring surfaces only the most relevant, high-intent prospects.",
+            "RedProwler monitors Reddit 24/7, scanning thousands of posts and comments. Our two-phase AI scoring surfaces only the most relevant, high-intent prospects.",
         detail: "Always scanning",
     },
     {

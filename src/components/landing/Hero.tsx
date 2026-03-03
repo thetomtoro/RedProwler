@@ -59,7 +59,7 @@ export function Hero() {
 
                         {/* Subheading */}
                         <p className="text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-in-up delay-200">
-                            RedPulse scans thousands of Reddit conversations to find people
+                            RedProwler scans thousands of Reddit conversations to find people
                             actively looking for what you sell — then arms you with AI-crafted
                             replies that convert.
                         </p>

@@ -4,11 +4,11 @@ import { dark } from "@clerk/themes"
 import "./globals.css"
 
 export const metadata: Metadata = {
-    title: "RedPulse — AI Reddit Lead Generation for Founders",
+    title: "RedProwler — AI Reddit Lead Generation for Founders",
     description:
-        "Get hundreds of customers from Reddit on autopilot. RedPulse monitors Reddit 24/7, finds your ideal customers, and generates AI-powered replies to convert them.",
+        "Get hundreds of customers from Reddit on autopilot. RedProwler monitors Reddit 24/7, finds your ideal customers, and generates AI-powered replies to convert them.",
     openGraph: {
-        title: "RedPulse — AI Reddit Lead Generation",
+        title: "RedProwler — AI Reddit Lead Generation",
         description: "Get hundreds of customers from Reddit on autopilot.",
         type: "website",
     },

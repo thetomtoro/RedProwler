@@ -35,7 +35,7 @@ export function LandingFooter() {
                                 <circle cx="16" cy="16" r="2" fill="currentColor" />
                             </svg>
                             <span className="font-bold font-[var(--font-display)] tracking-tight text-text-primary">
-                                Red<span className="text-accent">Pulse</span>
+                                Red<span className="text-accent">Prowler</span>
                             </span>
                         </Link>
                         <p className="text-text-tertiary text-sm leading-relaxed">
@@ -66,7 +66,7 @@ export function LandingFooter() {
                 {/* Bottom */}
                 <div className="mt-12 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-text-tertiary text-sm">
-                        &copy; {new Date().getFullYear()} RedPulse. All rights reserved.
+                        &copy; {new Date().getFullYear()} RedProwler. All rights reserved.
                     </p>
                     <div className="flex items-center gap-4">
                         <a

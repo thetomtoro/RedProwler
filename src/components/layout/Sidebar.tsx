@@ -40,7 +40,7 @@ export function Sidebar() {
                     <circle cx="16" cy="16" r="2" fill="currentColor" />
                 </svg>
                 <span className="font-bold font-[var(--font-display)] tracking-tight text-text-primary">
-                    Red<span className="text-accent">Pulse</span>
+                    Red<span className="text-accent">Prowler</span>
                 </span>
             </div>
 
