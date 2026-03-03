@@ -1,0 +1,427 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────────────
+// USERS
+// ──────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique @map("clerk_id")
+  email         String    @unique
+  displayName   String    @map("display_name")
+  avatarUrl     String?   @map("avatar_url")
+  onboarded     Boolean   @default(false)
+
+  // Subscription
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  plan                 PlanTier  @default(FREE)
+  planExpiresAt        DateTime? @map("plan_expires_at")
+
+  // Usage tracking
+  leadsUsedThisMonth     Int       @default(0) @map("leads_used_this_month")
+  aiCreditsUsedThisMonth Int       @default(0) @map("ai_credits_used_this_month")
+  usageResetAt           DateTime? @map("usage_reset_at")
+
+  // Integrations
+  slackWebhookUrl String? @map("slack_webhook_url")
+
+  // Relations
+  products          Product[]
+  engagements       Engagement[]
+  templateFavorites TemplateFavorite[]
+  competitors       Competitor[]
+  notifications     Notification[]     @relation("NotificationRecipient")
+  teamMemberships   TeamMember[]
+  analyticsEvents   AnalyticsEvent[]
+  webhooks          Webhook[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum PlanTier {
+  FREE
+  PRO
+  TEAM
+}
+
+// ──────────────────────────────────────────────
+// PRODUCTS
+// ──────────────────────────────────────────────
+
+model Product {
+  id             String  @id @default(cuid())
+  userId         String  @map("user_id")
+  name           String
+  url            String?
+  description    String  @db.Text
+  aiDescription  String? @map("ai_description") @db.Text
+  targetAudience String? @map("target_audience") @db.Text
+  keywords       String[]
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subreddits  ProductSubreddit[]
+  leads       Lead[]
+  competitors Competitor[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("products")
+}
+
+// ──────────────────────────────────────────────
+// SUBREDDITS
+// ──────────────────────────────────────────────
+
+model Subreddit {
+  id              String  @id @default(cuid())
+  name            String  @unique
+  displayName     String  @map("display_name")
+  description     String? @db.Text
+  subscriberCount Int     @default(0) @map("subscriber_count")
+  category        String?
+
+  avgPostsPerDay  Float?    @map("avg_posts_per_day")
+  bestPostTimeUtc String?   @map("best_post_time_utc")
+  lastScannedAt   DateTime? @map("last_scanned_at")
+
+  productLinks ProductSubreddit[]
+  leads        Lead[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subreddits")
+}
+
+model ProductSubreddit {
+  id          String          @id @default(cuid())
+  productId   String          @map("product_id")
+  subredditId String          @map("subreddit_id")
+  isActive    Boolean         @default(true) @map("is_active")
+  source      SubredditSource @default(AI_RECOMMENDED)
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  subreddit Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, subredditId])
+  @@map("product_subreddits")
+}
+
+enum SubredditSource {
+  AI_RECOMMENDED
+  USER_ADDED
+}
+
+// ──────────────────────────────────────────────
+// LEADS
+// ──────────────────────────────────────────────
+
+model Lead {
+  id          String @id @default(cuid())
+  productId   String @map("product_id")
+  subredditId String @map("subreddit_id")
+
+  // Reddit data
+  redditId        String            @unique @map("reddit_id")
+  redditType      RedditContentType @map("reddit_type")
+  title           String?
+  body            String            @db.Text
+  author          String
+  permalink       String
+  redditScore     Int               @default(0) @map("reddit_score")
+  commentCount    Int               @default(0) @map("comment_count")
+  redditCreatedAt DateTime          @map("reddit_created_at")
+
+  // AI scoring
+  relevanceScore  Float       @map("relevance_score")
+  relevanceReason String?     @map("relevance_reason") @db.Text
+  intentSignals   String[]    @map("intent_signals")
+  sentiment       Sentiment   @default(NEUTRAL)
+
+  // Status
+  status       LeadStatus @default(NEW)
+  isBookmarked Boolean    @default(false) @map("is_bookmarked")
+
+  // Platform
+  platform Platform @default(REDDIT)
+
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  subreddit   Subreddit    @relation(fields: [subredditId], references: [id], onDelete: Cascade)
+  engagements Engagement[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([productId, relevanceScore(sort: Desc)])
+  @@index([productId, status])
+  @@index([productId, createdAt(sort: Desc)])
+  @@index([subredditId])
+  @@index([platform])
+  @@map("leads")
+}
+
+enum RedditContentType {
+  POST
+  COMMENT
+}
+
+enum LeadStatus {
+  NEW
+  VIEWED
+  ENGAGED
+  CONVERTED
+  DISMISSED
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  QUESTION
+}
+
+enum Platform {
+  REDDIT
+  HACKER_NEWS
+  INDIE_HACKERS
+}
+
+// ──────────────────────────────────────────────
+// TEMPLATES
+// ──────────────────────────────────────────────
+
+model Template {
+  id           String           @id @default(cuid())
+  title        String
+  body         String           @db.Text
+  category     TemplateCategory
+  subcategory  String?
+
+  useCase          String?  @map("use_case") @db.Text
+  tags             String[]
+  isSystemTemplate Boolean  @default(true) @map("is_system_template")
+
+  usageCount    Int    @default(0) @map("usage_count")
+  avgEngagement Float? @map("avg_engagement")
+
+  favorites TemplateFavorite[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("templates")
+}
+
+model TemplateFavorite {
+  id         String @id @default(cuid())
+  userId     String @map("user_id")
+  templateId String @map("template_id")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, templateId])
+  @@map("template_favorites")
+}
+
+enum TemplateCategory {
+  QUESTION
+  STORY
+  OPINION
+  RECOMMENDATION
+  PROBLEM_SOLUTION
+  COMPARISON
+  CASE_STUDY
+  AMA
+  DISCUSSION
+  TUTORIAL
+}
+
+// ──────────────────────────────────────────────
+// ENGAGEMENTS
+// ──────────────────────────────────────────────
+
+model Engagement {
+  id     String         @id @default(cuid())
+  userId String         @map("user_id")
+  leadId String         @map("lead_id")
+  type   EngagementType
+
+  generatedContent String  @map("generated_content") @db.Text
+  editedContent    String? @map("edited_content") @db.Text
+  wasPosted        Boolean @default(false) @map("was_posted")
+
+  clickCount  Int  @default(0) @map("click_count")
+  upvoteCount Int? @map("upvote_count")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([leadId])
+  @@map("engagements")
+}
+
+enum EngagementType {
+  REPLY
+  CONVERSATION_STARTER
+  DM_TEMPLATE
+  POST
+}
+
+// ──────────────────────────────────────────────
+// COMPETITORS
+// ──────────────────────────────────────────────
+
+model Competitor {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  name      String
+  keywords  String[]
+
+  redditMentions CompetitorMention[]
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("competitors")
+}
+
+model CompetitorMention {
+  id            String    @id @default(cuid())
+  competitorId  String    @map("competitor_id")
+  redditId      String    @map("reddit_id")
+  title         String?
+  body          String    @db.Text
+  author        String
+  permalink     String
+  subredditName String    @map("subreddit_name")
+  sentiment     Sentiment @default(NEUTRAL)
+
+  competitor Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([competitorId, createdAt(sort: Desc)])
+  @@map("competitor_mentions")
+}
+
+// ──────────────────────────────────────────────
+// ANALYTICS EVENTS
+// ──────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id         String @id @default(cuid())
+  userId     String @map("user_id")
+  event      String
+  properties Json?  @db.JsonB
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, event, createdAt(sort: Desc)])
+  @@map("analytics_events")
+}
+
+// ──────────────────────────────────────────────
+// NOTIFICATIONS
+// ──────────────────────────────────────────────
+
+model Notification {
+  id            String           @id @default(cuid())
+  recipientId   String           @map("recipient_id")
+  type          NotificationType
+  title         String
+  body          String?          @db.Text
+  referenceId   String?          @map("reference_id")
+  referenceType String?          @map("reference_type")
+  read          Boolean          @default(false)
+
+  recipient User @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([recipientId, read, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEW_LEAD
+  HIGH_RELEVANCE_LEAD
+  COMPETITOR_MENTION
+  USAGE_LIMIT_WARNING
+  PLAN_EXPIRING
+  WEEKLY_DIGEST
+}
+
+// ──────────────────────────────────────────────
+// WEBHOOKS
+// ──────────────────────────────────────────────
+
+model Webhook {
+  id       String   @id @default(cuid())
+  userId   String   @map("user_id")
+  url      String
+  events   String[]
+  secret   String
+  isActive Boolean  @default(true) @map("is_active")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("webhooks")
+}
+
+// ──────────────────────────────────────────────
+// TEAM
+// ──────────────────────────────────────────────
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  teamOwnerId String   @map("team_owner_id")
+  role        TeamRole @default(MEMBER)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, teamOwnerId])
+  @@index([teamOwnerId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
