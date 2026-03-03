@@ -7,6 +7,10 @@ export const metadata: Metadata = {
     title: "RedProwler — AI Reddit Lead Generation for Founders",
     description:
         "Get hundreds of customers from Reddit on autopilot. RedProwler monitors Reddit 24/7, finds your ideal customers, and generates AI-powered replies to convert them.",
+    icons: {
+        icon: "/icon.svg",
+        apple: "/apple-icon.svg",
+    },
     openGraph: {
         title: "RedProwler — AI Reddit Lead Generation",
         description: "Get hundreds of customers from Reddit on autopilot.",
