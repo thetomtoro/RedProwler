@@ -26,6 +26,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
         ...(filters.subredditId && { subredditId: filters.subredditId }),
         ...(filters.status && { status: filters.status }),
         ...(filters.minScore && { relevanceScore: { gte: filters.minScore } }),
+        ...(filters.platform && { platform: filters.platform }),
         ...(filters.cursor && { createdAt: { lt: new Date(filters.cursor) } }),
     }
 

@@ -28,6 +28,7 @@ export const addCompetitorSchema = z.object({
 export const leadFilterSchema = z.object({
     productId: z.string().optional(),
     subredditId: z.string().optional(),
+    platform: z.enum(["REDDIT", "HACKER_NEWS"]).optional(),
     status: z.enum(["NEW", "VIEWED", "ENGAGED", "CONVERTED", "DISMISSED"]).optional(),
     minScore: z.coerce.number().min(0).max(1).optional(),
     cursor: z.string().optional(),
