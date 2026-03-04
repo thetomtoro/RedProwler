@@ -61,6 +61,11 @@ export async function requirePlan(requiredPlan: PlanTier) {
         throw new ApiError(403, `This feature requires the ${requiredPlan} plan or higher`)
     }
 
+    // A paid user with past_due payments loses access
+    if (user.plan !== "FREE" && user.subscriptionStatus !== "ACTIVE") {
+        throw new ApiError(403, "Your subscription payment is past due. Please update your payment method to continue.")
+    }
+
     return user
 }
 

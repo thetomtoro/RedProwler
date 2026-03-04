@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server"
 import { withErrorHandler, successResponse, ApiError } from "@/lib/api-helpers"
 import { requireAuth } from "@/lib/auth-helpers"
-import { prisma } from "@/lib/prisma"
-import { getStripe, STRIPE_PLANS, createCheckoutSession } from "@/lib/stripe"
+import { STRIPE_PLANS, createCheckoutSession } from "@/lib/stripe"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
@@ -25,24 +24,12 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const priceId = STRIPE_PLANS[plan]
     if (!priceId) throw new ApiError(400, "Invalid plan")
 
-    // Get or create Stripe customer
-    let customerId = user.stripeCustomerId
-    if (!customerId) {
-        const customer = await getStripe().customers.create({
-            email: user.email,
-            metadata: { userId: user.id },
-        })
-        customerId = customer.id
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { stripeCustomerId: customerId },
-        })
-    }
-
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
+    // Reuse existing Stripe customer ID to avoid duplicates on re-subscribe
     const session = await createCheckoutSession({
-        customerId,
+        customerId: user.stripeCustomerId ?? undefined,
+        customerEmail: user.stripeCustomerId ? undefined : user.email,
         priceId,
         userId: user.id,
         successUrl: `${appUrl}/settings?upgraded=true`,

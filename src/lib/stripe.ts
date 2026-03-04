@@ -1,17 +1,22 @@
 import Stripe from "stripe"
 
-let _stripe: Stripe | null = null
-
-export function getStripe() {
-    if (!_stripe) {
-        if (!process.env.STRIPE_SECRET_KEY) {
-            throw new Error("STRIPE_SECRET_KEY is not set")
+// Lazy singleton — builds succeed even without STRIPE_SECRET_KEY set
+let _stripe: Stripe | undefined
+export const stripe = new Proxy({} as Stripe, {
+    get(_target, prop, receiver) {
+        if (!_stripe) {
+            _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+                apiVersion: "2025-02-24.acacia",
+            })
         }
-        _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-            apiVersion: "2025-02-24.acacia",
-        })
-    }
-    return _stripe
+        const value = Reflect.get(_stripe, prop, receiver)
+        return typeof value === "function" ? value.bind(_stripe) : value
+    },
+})
+
+// Keep getStripe() for backward compatibility
+export function getStripe(): Stripe {
+    return stripe
 }
 
 export const STRIPE_PLANS = {
@@ -21,30 +26,36 @@ export const STRIPE_PLANS = {
 
 export async function createCheckoutSession({
     customerId,
+    customerEmail,
     priceId,
     userId,
     successUrl,
     cancelUrl,
 }: {
     customerId?: string
+    customerEmail?: string
     priceId: string
     userId: string
     successUrl: string
     cancelUrl: string
 }) {
-    return getStripe().checkout.sessions.create({
+    return stripe.checkout.sessions.create({
         mode: "subscription",
-        payment_method_types: ["card"],
-        ...(customerId ? { customer: customerId } : {}),
         line_items: [{ price: priceId, quantity: 1 }],
+        metadata: { userId },
         success_url: successUrl,
         cancel_url: cancelUrl,
-        metadata: { userId },
+        // Reuse existing customer to avoid duplicates on re-subscribe
+        ...(customerId
+            ? { customer: customerId }
+            : customerEmail
+                ? { customer_email: customerEmail }
+                : {}),
     })
 }
 
 export async function createPortalSession(customerId: string, returnUrl: string) {
-    return getStripe().billingPortal.sessions.create({
+    return stripe.billingPortal.sessions.create({
         customer: customerId,
         return_url: returnUrl,
     })
