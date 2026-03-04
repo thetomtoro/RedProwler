@@ -44,7 +44,7 @@ export function Hero() {
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                             </span>
                             <span className="text-sm text-text-secondary font-mono tracking-wide">
-                                <span className="text-accent font-semibold">2,847</span> signals detected today
+                                AI-Powered Reddit Lead Generation
                             </span>
                         </div>
 
@@ -59,9 +59,9 @@ export function Hero() {
 
                         {/* Subheading */}
                         <p className="text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-in-up delay-200">
-                            RedProwler scans thousands of Reddit conversations to find people
-                            actively looking for what you sell — then arms you with AI-crafted
-                            replies that convert.
+                            RedProwler&apos;s two-phase AI scans thousands of Reddit conversations
+                            — then surfaces only the ones where someone is actively looking for
+                            what you sell.
                         </p>
 
                         {/* CTAs */}

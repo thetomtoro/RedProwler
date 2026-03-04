@@ -1,31 +1,23 @@
 "use client"
 
-import { Target, Brain, FileText, BarChart3, Eye, Bell } from "lucide-react"
+import { Brain, FileText, BarChart3, Bell } from "lucide-react"
 
 const features = [
-    {
-        icon: Target,
-        title: "AI Lead Discovery",
-        description:
-            "24/7 Reddit monitoring across your targeted subreddits. Two-phase scoring finds high-intent prospects while filtering noise.",
-        stat: "1,000+",
-        statLabel: "leads/mo",
-    },
     {
         icon: Brain,
         title: "AI Reply Generation",
         description:
             "Get contextual conversation starters, reply suggestions, and DM templates powered by Claude. Authentic, never spammy.",
-        stat: "500+",
-        statLabel: "AI gens/mo",
+        stat: "Claude AI",
+        statLabel: "powered by",
     },
     {
         icon: FileText,
         title: "50+ Viral Templates",
         description:
             "Battle-tested post templates across 10 categories — stories, questions, comparisons, case studies. AI-personalized for your product.",
-        stat: "50+",
-        statLabel: "templates",
+        stat: "10",
+        statLabel: "categories",
     },
     {
         icon: BarChart3,
@@ -36,20 +28,12 @@ const features = [
         statLabel: "insights",
     },
     {
-        icon: Eye,
-        title: "Competitor Monitoring",
-        description:
-            "Track competitor mentions across Reddit. Get alerted when someone asks about alternatives — then swoop in.",
-        stat: "24/7",
-        statLabel: "tracking",
-    },
-    {
         icon: Bell,
         title: "Slack & Webhook Alerts",
         description:
             "Get instant Slack notifications for high-relevance leads. Connect custom webhooks to your existing workflow.",
         stat: "Instant",
-        statLabel: "alerts",
+        statLabel: "notifications",
     },
 ]
 
@@ -75,7 +59,7 @@ export function Features() {
                 </div>
 
                 {/* Feature grid */}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid sm:grid-cols-2 gap-5 max-w-4xl mx-auto">
                     {features.map((feature, i) => (
                         <div
                             key={feature.title}

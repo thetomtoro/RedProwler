@@ -29,12 +29,13 @@ export function CTASection() {
 
                     <div className="relative">
                         <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                            Ready to Turn Reddit Into Your{" "}
-                            <span className="gradient-text">#1 Growth Channel</span>?
+                            Start Finding Leads on{" "}
+                            <span className="gradient-text">Reddit Today</span>
                         </h2>
                         <p className="text-text-secondary text-lg max-w-2xl mx-auto mb-8">
-                            Join 500+ founders who are already getting customers from Reddit on autopilot.
-                            Start free — no credit card required.
+                            Your future customers are posting on Reddit right now.
+                            RedProwler finds them, scores them, and helps you respond
+                            — starting with a free plan.
                         </p>
                         <Link href="/sign-up">
                             <Button variant="cta" size="lg" className="min-w-[220px]">
@@ -42,18 +43,20 @@ export function CTASection() {
                             </Button>
                         </Link>
 
-                        {/* Stats row */}
-                        <div className="mt-10 flex items-center justify-center gap-8 sm:gap-12">
-                            {[
-                                { value: "500+", label: "Founders" },
-                                { value: "1.2M", label: "Leads Found" },
-                                { value: "47%", label: "Avg. Reply Rate" },
-                            ].map((stat) => (
-                                <div key={stat.label} className="text-center">
-                                    <p className="text-xl font-bold font-mono text-accent">{stat.value}</p>
-                                    <p className="text-xs text-text-tertiary mt-0.5">{stat.label}</p>
-                                </div>
-                            ))}
+                        {/* Trust signals */}
+                        <div className="mt-10 flex items-center justify-center gap-5 text-text-tertiary text-sm">
+                            <span className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                                No credit card required
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                                Free plan available
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                                Cancel anytime
+                            </span>
                         </div>
                     </div>
                 </div>
