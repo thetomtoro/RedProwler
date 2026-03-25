@@ -11,6 +11,12 @@ export const metadata: Metadata = {
         title: "RedProwler — AI Reddit Lead Generation",
         description: "Get hundreds of customers from Reddit on autopilot.",
         type: "website",
+        url: "https://redprowler.com",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "RedProwler — AI Reddit Lead Generation",
+        description: "Get hundreds of customers from Reddit on autopilot.",
     },
 }
 
